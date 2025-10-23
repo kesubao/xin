@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业信息展示</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Microsoft YaHei', Arial, sans-serif; 
+            background: #f5f5f5;
+            min-height: 100vh; 
+            padding: 0;
+        }
+        .container { 
+            max-width: 480px; 
+            margin: 0 auto; 
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .badge-container {
+            position: relative;
+            text-align: center;
+            padding-top: 30px;
+        }
+        .badge-img {
+            width: 200px;
+            height: auto;
+            display: inline-block;
+            filter: drop-shadow(0 5px 15px rgba(244, 197, 66, 0.3));
+        }
+        .company-name {
+            margin-top: 25px;
+            font-size: 28px;
+            color: #3b82f6;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+        }
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            padding: 5px 15px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 20px;
+            color: #16a34a;
+            font-size: 13px;
+        }
+        .info-section {
+            padding: 25px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .section-title {
+            font-size: 16px;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 3px solid #3b82f6;
+        }
+        .info-item {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f9f9f9;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            min-width: 100px;
+            color: #666;
+            font-size: 14px;
+            padding: 2px 8px;
+        }
+        .info-value {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+            word-break: break-all;
+            position: relative;
+            padding: 2px 8px;
+        }
+        .disclaimer {
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+        }
+        .disclaimer-text {
+            font-size: 11px;
+            line-height: 1.8;
+            color: #999;
+            max-width: 90%;
+            margin: 0 auto;
+            padding: 8px;
+        }
+        .join-trusted {
+            text-align: center;
+            padding: 15px 20px;
+            background: white;
+        }
+        .join-link {
+            color: #22c55e;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .join-link:hover {
+            color: #16a34a;
+            text-decoration: underline;
+        }
+        .error-container {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="companyCard">
+            <div class="error-container">
+                <div style="font-size: 40px; margin-bottom: 20px;">⏳</div>
+                <div style="font-size: 16px; color: #666;">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API服务器地址
+        const API_BASE_URL = 'http://xin.yituxs.com';
+        
+        // 从URL获取企业编码
+        function getCompanyCode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('code') || urlParams.get('id');
+        }
+
+        // 显示加载中
+        function showLoading() {
+            document.getElementById('companyCard').innerHTML = `
+                <div class="error-container">
+                    <div style="font-size: 40px; margin-bottom: 20px;">⏳</div>
+                    <div style="font-size: 16px; color: #666;">加载中...</div>
+                </div>
+            `;
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('companyCard').innerHTML = `
+                <div class="error-container">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-message">${message}</div>
+                    <a href="http://xin.yituxs.com" style="color: #3b82f6; text-decoration: none;">返回首页</a>
+                </div>
+            `;
+        }
+
+        // 显示企业信息
+        function showCompany(company) {
+            document.getElementById('companyCard').innerHTML = `
+                <div class="badge-container">
+                    <img src="https://via.placeholder.com/200x200?text=可信企业" alt="可信企业" class="badge-img">
+                </div>
+                
+                <div class="company-name">${company.company_name}</div>
+                <div style="text-align: center;">
+                    <span class="verified-badge">
+                        <span>✓ 已认定</span>
+                    </span>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">基本信息</div>
+                    <div class="info-item">
+                        <div class="info-label">企业简称</div>
+                        <div class="info-value">${company.company_name}</div>
+                    </div>
+                    ${company.business_scope ? `
+                    <div class="info-item">
+                        <div class="info-label">行业分类</div>
+                        <div class="info-value">${company.business_scope}</div>
+                    </div>` : ''}
+                    <div class="info-item">
+                        <div class="info-label">企业链 ID</div>
+                        <div class="info-value">${company.unique_code}</div>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="section-title">主体信息</div>
+                    ${company.company_logo ? `
+                    <div class="info-item">
+                        <div class="info-label">企业类型</div>
+                        <div class="info-value">${company.company_logo}</div>
+                    </div>` : ''}
+                    ${company.established_date ? `
+                    <div class="info-item">
+                        <div class="info-label">成立日期</div>
+                        <div class="info-value">${company.established_date}</div>
+                    </div>` : ''}
+                    ${company.company_desc ? `
+                    <div class="info-item">
+                        <div class="info-label">经营范围</div>
+                        <div class="info-value" style="line-height: 1.8;">${company.company_desc}</div>
+                    </div>` : ''}
+                </div>
+                
+                <div class="disclaimer">
+                    <div class="disclaimer-text">
+                        该企业已加入可信计划，完成"可信企业"认定。该认定并非企业微信官方和政府相关机构的认定。仅为我司发起的可信计划认定。认定标准以国家企业公示信息中企业主体的存续状态为准，该认定状态为一次性，并不会定期更新。该认定网页信息，仅仅作为企业信息的展示，该企业微信主体的所有行为并不因企业认定成功而具备真实性与合法性，敬请留意甄别。若此企业信息侵犯了您的组织名称、商标等合法权益，请通过合法途径进行投诉。
+                    </div>
+                </div>
+                
+                <div class="join-trusted">
+                    <a href="http://xin.yituxs.com" class="join-link">我也要加入可信企业 ></a>
+                </div>
+            `;
+            
+            document.title = company.company_name + ' - 企业信息';
+        }
+
+        // 加载企业信息
+        function loadCompany() {
+            const code = getCompanyCode();
+            
+            if (!code) {
+                showError('缺少企业编码参数，请检查链接是否正确');
+                return;
+            }
+            
+            showLoading();
+            
+            // 调用API获取企业信息
+            fetch(`${API_BASE_URL}/api/api.php?action=get&code=${encodeURIComponent(code)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showCompany(data.data);
+                    } else {
+                        showError(data.message || '企业不存在或已禁用');
+                    }
+                })
+                .catch(error => {
+                    console.error('加载失败:', error);
+                    showError('加载失败，请检查网络连接或稍后重试');
+                });
+        }
+        
+        // 页面加载时执行
+        loadCompany();
+    </script>
+</body>
+</html>
